@@ -13,107 +13,153 @@
 
 package org.eclipse.jetty.toolchain.xhtml;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.xml.catalog.Catalog;
-import javax.xml.catalog.CatalogManager;
-import javax.xml.catalog.CatalogResolver;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
+import org.eclipse.jetty.toolchain.test.MavenPaths;
 import org.junit.jupiter.api.Test;
-import org.w3c.dom.Document;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class XHTMLValidationTest
 {
     @Test
-    public void testXhtmlValidation()
+    public void testXhtmlValidation() throws IOException, InvalidXHTMLException
     {
-        String xhtml = """
-            <?xml version="1.0" encoding="utf-8"?>
-            <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-            <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
-              <head>
-                <title>Test XHTML</title>
-              </head>
-              <body>
-                <p>
-                  Let's use some HTML named entities.
-                  &nbsp;
-                </p>
-                <p>
-                  What about <a href="/foo?a=b&amp;c=d">link with query params</a>
-                </p>
-              </body>
-            </html>
-            """;
-        assertTrue(isValidXHtml(xhtml));
+        Path exampleHtml = MavenPaths.findTestResourceFile("example.xhtml");
+        String xhtml = new String(Files.readAllBytes(exampleHtml), StandardCharsets.UTF_8);
+        XHTMLValidator.validate(xhtml);
     }
 
-    private static boolean isValidXHtml(String content)
+    public static Stream<String> publicIds() throws IOException
     {
-        // we expect that our generated output conforms to text/xhtml is well formed
-        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)))
+        Set<String> publicIds = new HashSet<>();
+        Path catalogDir = MavenPaths.findMainResourceDir("org/eclipse/jetty/toolchain/xhtml");
+
+        Pattern publicIdPattern = Pattern.compile("\"(-//[^\"]*)\"");
+
+        List<IOException> errors = new ArrayList<>();
+
+        try (Stream<Path> files = Files.list(catalogDir))
         {
-            Catalog catalog = CatalogXHTML.getCatalog();
-            CatalogResolver resolver = CatalogManager.catalogResolver(catalog);
-
-            DocumentBuilderFactory xmlDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
-            xmlDocumentBuilderFactory.setValidating(true);
-            DocumentBuilder db = xmlDocumentBuilderFactory.newDocumentBuilder();
-            db.setEntityResolver(resolver);
-            List<SAXParseException> errors = new ArrayList<>();
-            db.setErrorHandler(new ErrorHandler()
-            {
-                @Override
-                public void warning(SAXParseException exception)
+            files.filter(Files::isRegularFile)
+                .forEach((file) ->
                 {
-                    exception.printStackTrace();
-                }
-
-                @Override
-                public void error(SAXParseException exception)
-                {
-                    errors.add(exception);
-                }
-
-                @Override
-                public void fatalError(SAXParseException exception)
-                {
-                    errors.add(exception);
-                }
-            });
-
-            // We consider this content to be XML well-formed if these 2 lines do not throw an Exception
-            Document doc = db.parse(inputStream);
-            doc.getDocumentElement().normalize();
-
-            if (errors.size() > 0)
-            {
-                IOException ioException = new IOException("Failed to validate XHTML");
-                for (SAXException saxException : errors)
-                {
-                    ioException.addSuppressed(saxException);
-                }
-                fail(ioException);
-            }
-
-            return true; // it's well-formed
+                    try
+                    {
+                        Files.readAllLines(file)
+                            .forEach(line -> {
+                                Matcher matcher = publicIdPattern.matcher(line);
+                                if(matcher.find())
+                                {
+                                    publicIds.add(matcher.group(1));
+                                }
+                            });
+                    }
+                    catch (IOException e)
+                    {
+                        errors.add(e);
+                    }
+                });
         }
-        catch (IOException | ParserConfigurationException | SAXException e)
+
+        if (!errors.isEmpty())
         {
-            e.printStackTrace(System.err);
-            return false; // XHTML has got issues
+            IOException oops = new IOException("Read failures");
+            errors.forEach(oops::addSuppressed);
+            throw oops;
         }
+
+        // known public ids that we don't want to validate (as they are outside of the scope of this schema)
+        publicIds.remove("-//OASIS//DTD Entity Resolution XML Catalog V1.0//EN");
+        publicIds.remove("-//W3C//NOTATION AFDR ARCBASE XHTML 1.1//EN");
+        publicIds.remove("-//Your Name Here//DTD XHTML Legacy 1.1//EN");
+
+        // Remove all "-//W3C//NOTATION " references.
+        List<String> notationRefs = publicIds.stream().filter(ref -> ref.startsWith("-//W3C//NOTATION ")).collect(Collectors.toList());
+        for (String notationRef: notationRefs)
+        {
+            publicIds.remove(notationRef);
+        }
+
+        return publicIds.stream().sorted();
+    }
+
+    @ParameterizedTest
+    @MethodSource("publicIds")
+    public void testPublicIdResolving(String publicId)
+    {
+        // System.err.printf("testPublicIdResolving(\"%s\")%n", publicId);
+        Catalog catalog = CatalogXHTML.getCatalogStrict();
+        String resolved = catalog.matchPublic(publicId);
+        assertNotNull(resolved);
+    }
+
+    public static Stream<String> systemIds() throws IOException
+    {
+        Set<String> systemIds = new HashSet<>();
+        Path catalogDir = MavenPaths.findMainResourceDir("org/eclipse/jetty/toolchain/xhtml");
+
+        Pattern systemIdPattern = Pattern.compile("\"(http://(www\\.)?w3\\.org/[^\"]*)\"");
+
+        List<IOException> errors = new ArrayList<>();
+
+        try (Stream<Path> files = Files.list(catalogDir))
+        {
+            files.filter(Files::isRegularFile)
+                .forEach((file) ->
+                {
+                    try
+                    {
+                        Files.readAllLines(file)
+                            .forEach(line -> {
+                                Matcher matcher = systemIdPattern.matcher(line);
+                                if(matcher.find())
+                                {
+                                    systemIds.add(matcher.group(1));
+                                }
+                            });
+                    }
+                    catch (IOException e)
+                    {
+                        errors.add(e);
+                    }
+                });
+        }
+
+        if (!errors.isEmpty())
+        {
+            IOException oops = new IOException("Read failures");
+            errors.forEach(oops::addSuppressed);
+            throw oops;
+        }
+
+        // known systems ids that we don't want to validate (as they are outside of the scope of this schema)
+        systemIds.remove("http://www.w3.org/2001/XMLSchema-instance");
+
+        return systemIds.stream().sorted();
+    }
+
+    @ParameterizedTest
+    @MethodSource("systemIds")
+    public void testSystemIdResolving(String systemId)
+    {
+        // System.err.printf("testSystemIdResolving(\"%s\")%n", systemId);
+        Catalog catalog = CatalogXHTML.getCatalogStrict();
+        String resolved = catalog.matchSystem(systemId);
+        assertNotNull(resolved);
     }
 }

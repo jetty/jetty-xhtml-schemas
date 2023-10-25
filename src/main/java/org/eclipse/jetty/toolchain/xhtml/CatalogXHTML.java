@@ -39,9 +39,23 @@ public final class CatalogXHTML
         }
     }
 
+    /**
+     * @deprecated use {@link #getCatalogStrict()} instead.
+     */
+    @Deprecated
     public static Catalog getCatalog()
     {
-        CatalogFeatures f = CatalogFeatures.builder().with(CatalogFeatures.Feature.RESOLVE, "continue").build();
+        return getCatalog("continue");
+    }
+
+    public static Catalog getCatalogStrict()
+    {
+        return getCatalog("strict");
+    }
+
+    public static Catalog getCatalog(String resolveMode)
+    {
+        CatalogFeatures f = CatalogFeatures.builder().with(CatalogFeatures.Feature.RESOLVE, resolveMode).build();
         return CatalogManager.catalog(f, CatalogXHTML.getURI());
     }
 }
