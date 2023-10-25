@@ -9,6 +9,7 @@
 
   <name>Jetty Toolchain :: XHTML Schemas</name>
   <description>XHTML Schemas and utilities</description>
+  <url>https://eclipse.dev/jetty/</url>
   <inceptionYear>1995</inceptionYear>
 
   <licenses>
