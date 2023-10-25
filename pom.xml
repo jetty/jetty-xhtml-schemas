@@ -1,16 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <artifactId>jetty-toolchain</artifactId>
-    <groupId>org.eclipse.jetty.toolchain</groupId>
-    <version>1.7</version>
-  </parent>
+
+  <groupId>org.eclipse.jetty.toolchain</groupId>
   <artifactId>jetty-xhtml-schemas</artifactId>
   <packaging>jar</packaging>
   <version>1.4-SNAPSHOT</version>
+
   <name>Jetty Toolchain :: XHTML Schemas</name>
   <description>XHTML Schemas and utilities</description>
+  <inceptionYear>1995</inceptionYear>
+
+  <licenses>
+    <license>
+      <name>Apache Software License - Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+    </license>
+    <license>
+      <name>Eclipse Public License - Version 1.0</name>
+      <url>http://www.eclipse.org/org/documents/epl-v10.php</url>
+    </license>
+  </licenses>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <compiler.source>11</compiler.source>
@@ -26,6 +37,7 @@
     <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
   </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -46,6 +58,9 @@
         <configuration>
           <useReleaseProfile>true</useReleaseProfile>
           <releaseProfiles>eclipse-release</releaseProfiles>
+          <goals>deploy</goals>
+          <preparationGoals>clean install</preparationGoals>
+          <mavenExecutorId>forked-path</mavenExecutorId>
         </configuration>
       </plugin>
       <plugin>
@@ -132,6 +147,96 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>eclipse-release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <inherited>true</inherited>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>errorprone</id>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-compiler-plugin</artifactId>
+              <configuration>
+                <showWarnings>true</showWarnings>
+                <compilerId>javac-with-errorprone</compilerId>
+                <forceJavacCompilerUse>true</forceJavacCompilerUse>
+                <compilerArgs>
+                  <arg>-XepAllErrorsAsWarnings</arg>
+                  <arg>-Xep:OperatorPrecedence:OFF</arg>
+                </compilerArgs>
+              </configuration>
+              <dependencies>
+                <dependency>
+                  <groupId>org.codehaus.plexus</groupId>
+                  <artifactId>plexus-compiler-javac-errorprone</artifactId>
+                  <version>2.13.0</version>
+                </dependency>
+                <!-- override plexus-compiler-javac-errorprone's dependency on
+                     Error Prone with the latest version -->
+                <dependency>
+                  <groupId>com.google.errorprone</groupId>
+                  <artifactId>error_prone_core</artifactId>
+                  <version>2.23.0</version>
+                </dependency>
+              </dependencies>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
+
   <dependencies>
     <dependency>
       <groupId>org.eclipse.jetty.toolchain</groupId>
@@ -142,10 +247,32 @@
   </dependencies>
 
   <scm>
-    <connection>scm:git:https://github.com/eclipse/jetty.toolchain.git</connection>
-    <developerConnection>scm:git:git@github.com:eclipse/jetty.toolchain.git</developerConnection>
-    <url>https://github.com/eclipse/jetty.toolchain/tree/master/jetty-xhtml-schemas</url>
-    <tag>HEAD</tag>
+    <connection>scm:git:https://github.com/jetty/jetty.schemas.xhtml.git</connection>
+    <developerConnection>scm:git:git@github.com:jetty/jetty.schemas.xhtml.git</developerConnection>
+    <url>https://github.com/jetty/jetty.schemas.xhtml</url>
   </scm>
+
+  <issueManagement>
+    <system>github</system>
+    <url>https://github.com/jetty/jetty.schemas.xhtml</url>
+  </issueManagement>
+
+  <distributionManagement>
+    <repository>
+      <id>oss.sonatype.org</id>
+      <name>Jetty Staging Repository</name>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+    <snapshotRepository>
+      <id>oss.sonatype.org</id>
+      <name>Jetty Snapshot Repository</name>
+      <url>https://oss.sonatype.org/content/repositories/jetty-snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <organization>
+    <name>Mort Bay Consulting</name>
+    <url>http://www.mortbay.com</url>
+  </organization>
 </project>
 
