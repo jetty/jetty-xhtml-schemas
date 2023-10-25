@@ -274,5 +274,22 @@
     <name>Mort Bay Consulting</name>
     <url>http://www.mortbay.com</url>
   </organization>
+
+  <developers>
+    <developer>
+      <id>joakime</id>
+      <name>Joakim Erdfelt</name>
+      <email>joakim@webtide.com</email>
+      <organization>Webtide</organization>
+      <organizationUrl>https://webtide.com</organizationUrl>
+    </developer>
+    <developer>
+      <id>olamy</id>
+      <name>Olivier Lamy</name>
+      <email>olamy@webtide.com</email>
+      <organization>Webtide</organization>
+      <organizationUrl>https://webtide.com</organizationUrl>
+    </developer>
+  </developers>
 </project>
 
