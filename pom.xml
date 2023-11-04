@@ -98,24 +98,6 @@
             <mavenExecutorId>forked-path</mavenExecutorId>
           </configuration>
         </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-remote-resources-plugin</artifactId>
-          <version>${maven-remote-resources-plugin.version}</version>
-          <executions>
-            <execution>
-              <phase>generate-resources</phase>
-              <goals>
-                <goal>process</goal>
-              </goals>
-              <configuration>
-                <resourceBundles>
-                  <resourceBundle>org.eclipse.jetty.toolchain:jetty-artifact-remote-resources:1.2</resourceBundle>
-                </resourceBundles>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -142,6 +124,24 @@
                 </requireJavaVersion>
                 <requireUpperBoundDeps />
               </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-remote-resources-plugin</artifactId>
+        <version>${maven-remote-resources-plugin.version}</version>
+        <executions>
+          <execution>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>process</goal>
+            </goals>
+            <configuration>
+              <resourceBundles>
+                <resourceBundle>org.eclipse.jetty.toolchain:jetty-artifact-remote-resources:1.2</resourceBundle>
+              </resourceBundles>
             </configuration>
           </execution>
         </executions>
