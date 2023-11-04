@@ -24,31 +24,11 @@ on:
       - 'main'
   pull_request:
 
+
 jobs:
   build:
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        java: [11]
-        jdk: [temurin]
-      fail-fast: false
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: ${{ matrix.jdk }}
-          java-version: ${{ matrix.java }}
-          cache: 'maven'
-
-      - name: Set up Maven
-        run: mvn --errors --batch-mode --show-version wrapper:wrapper "-Dmaven=3.9.5"
-
-      - name: Build with Maven
-        run: ./mvnw install javadoc:javadoc -e -B -V
+    name: Maven Build CI
+    uses: jetty-project/.github/.github/workflows/maven-ci.yml@master
+    with:
+      jdk-matrix: '[ "11" ]'
+      verify-goal: 'install javadoc:javadoc -e -B -V'
