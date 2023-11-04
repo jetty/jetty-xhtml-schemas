@@ -48,7 +48,6 @@ jobs:
           cache: 'maven'
 
       - name: Set up Maven
-        if: steps.should-run.conclusion == 'success'
         run: mvn --errors --batch-mode --show-version wrapper:wrapper "-Dmaven=3.9.5"
 
       - name: Build with Maven
