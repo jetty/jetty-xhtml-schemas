@@ -34,54 +34,73 @@
     <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
     <maven-remote-resources-plugin.version>3.1.0</maven-remote-resources-plugin.version>
     <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
-    <maven-javadoc-plugin.version>3.6.0</maven-javadoc-plugin.version>
-    <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
   </properties>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>3.3.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
+          <configuration>
+            <source>${compiler.source}</source>
+            <target>${compiler.target}</target>
+            <release>${compiler.release}</release>
+            <showWarnings>true</showWarnings>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>3.1.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-install-plugin</artifactId>
+          <version>3.1.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.3.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.6.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.3.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>3.3.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>${maven-release-plugin.version}</version>
+          <configuration>
+            <useReleaseProfile>true</useReleaseProfile>
+            <releaseProfiles>eclipse-release</releaseProfiles>
+            <goals>deploy</goals>
+            <preparationGoals>clean install</preparationGoals>
+            <mavenExecutorId>forked-path</mavenExecutorId>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven-compiler-plugin.version}</version>
-        <configuration>
-          <source>${compiler.source}</source>
-          <target>${compiler.target}</target>
-          <release>${compiler.release}</release>
-          <showWarnings>true</showWarnings>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>${maven-release-plugin.version}</version>
-        <configuration>
-          <useReleaseProfile>true</useReleaseProfile>
-          <releaseProfiles>eclipse-release</releaseProfiles>
-          <goals>deploy</goals>
-          <preparationGoals>clean install</preparationGoals>
-          <mavenExecutorId>forked-path</mavenExecutorId>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-remote-resources-plugin</artifactId>
-        <version>${maven-remote-resources-plugin.version}</version>
-        <executions>
-          <execution>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>process</goal>
-            </goals>
-            <configuration>
-              <resourceBundles>
-                <resourceBundle>org.eclipse.jetty.toolchain:jetty-artifact-remote-resources:1.2</resourceBundle>
-              </resourceBundles>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -105,6 +124,24 @@
                 </requireJavaVersion>
                 <requireUpperBoundDeps />
               </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-remote-resources-plugin</artifactId>
+        <version>${maven-remote-resources-plugin.version}</version>
+        <executions>
+          <execution>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>process</goal>
+            </goals>
+            <configuration>
+              <resourceBundles>
+                <resourceBundle>org.eclipse.jetty.toolchain:jetty-artifact-remote-resources:1.2</resourceBundle>
+              </resourceBundles>
             </configuration>
           </execution>
         </executions>
@@ -155,11 +192,6 @@
       <build>
         <plugins>
           <plugin>
-            <inherited>true</inherited>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-deploy-plugin</artifactId>
-          </plugin>
-          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
             <executions>
@@ -186,6 +218,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
+            <version>3.1.0</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
