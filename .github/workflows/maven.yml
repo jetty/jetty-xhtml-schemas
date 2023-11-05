@@ -24,7 +24,6 @@ on:
       - 'main'
   pull_request:
 
-
 jobs:
   build:
     name: Maven Build CI
