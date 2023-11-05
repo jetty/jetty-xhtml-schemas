@@ -31,4 +31,3 @@ jobs:
     uses: jetty/.github/.github/workflows/maven-ci.yml@main
     with:
       jdk-matrix: '[ "11" ]'
-      verify-goal: 'install javadoc:javadoc -e -B -V'
